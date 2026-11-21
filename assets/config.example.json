@@ -1,7 +1,7 @@
 {
   "_说明": "复制本文件为 config.json 后填写。密钥也可只放环境变量 XIAOPI_LLM_KEY，避免写进文件。",
   "xiaomusic_url": "auto",
-  "_xiaomusic说明": "auto 或留空=自动发现（推荐，IP 变了也能自适应）。也可填死地址如 http://192.168.x.x:58090。音箱自身 IP 无需填写——它只跟小米云端通信，我们只连 xiaomusic。",
+  "_xiaomusic说明": "auto 或留空=自动发现（推荐，IP 变了也能自适应）。也可填死地址如 http://<xiaomusic主机>:<端口>。音箱自身 IP 无需填写——它只跟小米云端通信，我们只连 xiaomusic。",
   "xiaomusic_port": 58090,
   "_xiaomusic_port说明": "auto 探测时用的 xiaomusic 端口。你的 xiaomusic 若改成别的宿主端口，改这里即可（也可直接把 xiaomusic_url 填成完整地址含端口）。",
   "did": "",
