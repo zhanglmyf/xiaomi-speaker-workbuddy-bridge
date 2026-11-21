@@ -16,7 +16,7 @@
 
   python3 netprobe.py                          # 打印探测报告
   python3 netprobe.py --container xiaomusic     # 指定容器名
-  python3 netprobe.py --docker-cmd "ssh root@172.17.0.1 docker"
+  python3 netprobe.py --docker-cmd "ssh root@<网关IP> docker"
 """
 import argparse
 import json
@@ -70,7 +70,9 @@ def gateway_ip() -> str:
         pass
     ip = self_ip()
     parts = ip.split(".")
-    return ".".join(parts[:3] + ["1"]) if len(parts) == 4 else "172.17.0.1"
+    if len(parts) == 4:
+        return ".".join(parts[:3] + ["1"])
+    return "127.0.0.1"  # 取不到网关时的安全兜底，循环回环不会误连外网
 
 
 # ---------- docker 通道 ----------
@@ -80,9 +82,11 @@ def detect_docker(explicit: str | None = None) -> list[str] | None:
         c = shlex.split(explicit)
         rc, _, _ = _run(c + ["ps"])
         return c if rc == 0 else None
+    # 网关 IP 动态获取（容器默认网关通常即宿主机/ssh 可达地址），不写死
+    gw = gateway_ip()
     candidates = [
         ["docker"],
-        ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5", "root@172.17.0.1", "docker"],
+        ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5", f"root@{gw}", "docker"],
     ]
     # 可选：通过环境变量指定额外 SSH 目标（如某台 NAS），避免写死具体 IP
     extra = os.environ.get("XIAOPI_SSH_TARGET", "").strip()
@@ -191,7 +195,7 @@ def suggest_bridge_urls(listen_port: int = 8900, docker: list[str] | None = None
                         container: str | None = None) -> list[str]:
     """推导"xiaomusic 容器内能访问 WorkBuddy 桥接"的地址候选（优先级从高到低）"""
     urls = []
-    # 同宿主机容器间：用 WorkBuddy 容器 IP（docker 默认网段 172.17.x.x）
+    # 同宿主机容器间：用 WorkBuddy 自身 IP（docker 网桥/局域网段动态获取）
     me = self_ip()
     if me and not me.startswith("127."):
         urls.append(f"http://{me}:{listen_port}/speak")
