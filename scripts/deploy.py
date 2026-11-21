@@ -11,7 +11,7 @@ xiaomusic 容器执行，重启并验证。适配任意音箱型号、任意容�
   python3 deploy.py --wake <新口令> --bridge-port <新端口>   # 命令行临时覆盖
 
   若自动探测不到 docker，手动指定通道：
-  python3 deploy.py --docker-cmd "ssh root@172.17.0.1 docker" ...
+  python3 deploy.py --docker-cmd "ssh root@<网关IP> docker" ...
 
 优先级：命令行 > 环境变量(XIAOPI_*) > config.json > 内置默认。
 """
@@ -62,8 +62,14 @@ def detect_docker(explicit: str | None) -> list[str] | None:
         return shlex.split(explicit)
     if _nb_detect:
         return _nb_detect(None)
+    # 网关 IP 动态获取，不写死具体地址
+    try:
+        from netprobe import gateway_ip as _gw
+        gw = _gw()
+    except Exception:
+        gw = "127.0.0.1"
     for c in (["docker"],
-              ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5", "root@172.17.0.1", "docker"]):
+              ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5", f"root@{gw}", "docker"]):
         try:
             rc, out, err = run(c + ["ps", "--format", "{{.Names}}"], capture=True)
             if rc == 0 and err.strip() == "":
@@ -81,7 +87,7 @@ def main():
         return cfg.get(key, fallback)
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("--docker-cmd", help="docker 命令前缀，如 'ssh root@172.17.0.1 docker'")
+    ap.add_argument("--docker-cmd", help="docker 命令前缀，如 'ssh root@<网关IP> docker'")
     ap.add_argument("--container", default=os.environ.get("XIAOPI_CONTAINER", cv("container", "xiaomusic")))
     ap.add_argument("--bridge", default=os.environ.get("XIAOPI_BRIDGE_URL", ""),
                     help="写入 xiaomusic 插件的桥接地址；留空=自动推导容器内可达地址")
