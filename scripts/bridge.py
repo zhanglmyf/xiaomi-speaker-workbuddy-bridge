@@ -64,7 +64,7 @@ DEFAULTS = {
         "timeout_sec": 20,
     },
     "assistant_name": "小皮",
-    "owner_name": "老张",
+    "owner_name": "主人",
     "wake_keyword": "小皮小皮",
     "feedback": "收到，小皮正在想",
     "cooldown_sec": 3.0,
