@@ -20,7 +20,7 @@
 | 小米账号登录 | xiaomusic Web UI 能看到音箱设备在线 |
 | Python 3.10+ | 安装 `aiohttp`：`pip install aiohttp` |
 | 任意 OpenAI 兼容 LLM | 智谱 GLM / DeepSeek / Ollama 本地均可 |
-| 网络连通（GitHub API） | deploy.py 需要调 GitHub API；如直连不通，可设代理：`export https_proxy=http://192.168.1.5:7890`（NAS 透明代理）或 `http://127.0.0.1:32899`（容器内代理） |
+| 网络（可选代理） | 仅当环境需要联网拉依赖时用到；如直连不通，按**你自己的环境**设置，例如 `export https_proxy=http://<代理主机>:<端口>`（地址因人而异，请替换成你的代理） |
 
 ## 快速开始（5 步）
 
@@ -52,7 +52,7 @@ cp assets/config.example.json scripts/config.json
 | `did` | 音箱 miotDID；留空自动发现 | `""` |
 | `device_match` | 多设备时按型号筛选 | `"LX06"` |
 | `assistant_name` | 助手名 | `"小皮"` |
-| `owner_name` | 主人称呼 | `"老张"` |
+| `owner_name` | 主人称呼（填你自己的，仅进系统提示） | `"主人"` |
 | `workspace_dir` | 任务单/存档落点 | 留空用 `scripts/data/` |
 | `dialect_file` | 方言表 | `"dialect.md"`（可选） |
 
@@ -81,7 +81,7 @@ python3 scripts/deploy.py
 
 如果自动探测不到 docker，手动指定通道：
 ```bash
-python3 scripts/deploy.py --docker-cmd "ssh root@192.168.1.5 docker"
+python3 scripts/deploy.py --docker-cmd "ssh root@<你的NAS或网关IP> docker"
 ```
 
 deploy 做的事（全部幂等、改前自动备份）：
