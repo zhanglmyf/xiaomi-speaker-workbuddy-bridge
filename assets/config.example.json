@@ -21,14 +21,14 @@
   },
   "_llm说明": "任意 OpenAI 兼容 API 均可：智谱/DeepSeek/OpenRouter 填对应 api+model+key；本地 Ollama 填 http://127.0.0.1:11434/v1/chat/completions，key 随便填。",
   "assistant_name": "小皮",
-  "owner_name": "老张",
+  "owner_name": "主人",
   "wake_keyword": "小皮小皮",
   "_wake说明": "口令只改这一处：重新跑 deploy.py 会把口令同步注册进 xiaomusic（插件口令、active_cmd 全自动），不用手动改容器。喊法仍是「小爱同学……<口令>，任务」。",
   "feedback": "收到，小皮正在想",
   "cooldown_sec": 3.0,
   "reply_max_chars": 120,
   "workspace_dir": "",
-  "_workspace说明": "留空=脚本同目录 data/（任何环境可写）。要落进 WorkBuddy 工作空间就填绝对路径，如 /config/WorkBuddy/<空间>/.workbuddy/xiaopi",
+  "_workspace说明": "留空=脚本同目录 data/（任何环境可写）。要落进工作空间就填该空间下的绝对路径（按你自己的环境填写）",
   "history_in_tmp": true,
   "dialect_file": "dialect.md"
 }
