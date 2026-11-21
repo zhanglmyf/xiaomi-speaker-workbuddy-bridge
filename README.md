@@ -20,6 +20,7 @@
 | 小米账号登录 | xiaomusic Web UI 能看到音箱设备在线 |
 | Python 3.10+ | 安装 `aiohttp`：`pip install aiohttp` |
 | 任意 OpenAI 兼容 LLM | 智谱 GLM / DeepSeek / Ollama 本地均可 |
+| 网络连通（GitHub API） | deploy.py 需要调 GitHub API；如直连不通，可设代理：`export https_proxy=http://192.168.1.5:7890`（NAS 透明代理）或 `http://127.0.0.1:32899`（容器内代理） |
 
 ## 快速开始（5 步）
 
