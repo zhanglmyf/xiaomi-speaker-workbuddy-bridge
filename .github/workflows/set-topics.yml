@@ -1,0 +1,27 @@
+name: Set repository topics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/set-topics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  set-topics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update topics via REST API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -f -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/topics" \
+            -d '{"names": ["xiaomi", "xiaoai", "voice-assistant", "workbuddy", "openai-compatible", "tts", "agent", "smart-home", "chinese"]}'
+          echo "Topics updated successfully"
