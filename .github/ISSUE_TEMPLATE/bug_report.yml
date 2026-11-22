@@ -1,0 +1,54 @@
+name: 问题报告
+description: 遇到故障，按模板填写便于快速定位
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: 请**不要**粘贴真实 IP、token、账号、密钥。日志请打码后再贴。
+  - type: input
+    id: env
+    attributes:
+      label: 运行环境
+      description: 系统 / Docker 版本 / 是本机还是 NAS
+      placeholder: 例如 Debian 12 / Docker 24 / 群晖 NAS
+    validations:
+      required: true
+  - type: input
+    id: speaker
+    attributes:
+      label: 音箱型号
+      placeholder: 例如 LX06 / 小爱音箱 Pro
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: 问题出在哪一步
+      options:
+        - 语音捕获（xiaomusic 抓不到文字）
+        - 桥接服务（health / 端口）
+        - 播报（接口 OK 但没声）
+        - 部署（deploy.py 打补丁）
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 你喊了什么、期望什么、实际发生什么
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 关键日志（请打码）
+      description: xiaomusic 容器日志或 bridge 输出的关键行
+      render: shell
+  - type: input
+    id: config
+    attributes:
+      label: config.json 关键项
+      description: 只需贴 xiaomusic_url 模式、端口、LLM 类型，不要贴 key
+      placeholder: auto / 8900 / 智谱
