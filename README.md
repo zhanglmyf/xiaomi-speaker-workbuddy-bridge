@@ -1,6 +1,5 @@
 # Xiaomi Speaker WorkBuddy Bridge
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Stars](https://img.shields.io/github/stars/zhanglmyf/xiaomi-speaker-workbuddy-bridge?style=social)](https://github.com/zhanglmyf/xiaomi-speaker-workbuddy-bridge/stargazers)
@@ -211,6 +210,13 @@ python3 scripts/healthcheck.py
 ```
 
 改动记录见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 相关项目
+
+- [xiaomi-speaker-workbuddy-bridge](https://github.com/zhanglmyf/xiaomi-speaker-workbuddy-bridge)**（当前项目）** — 把任意小米/小爱音箱接入 AI 语音助手
+- [dsh-universal-installer](https://github.com/zhanglmyf/dsh-universal-installer) — 跨平台部署 DeepSeek Harness
+- [dsh-free-model-bridge](https://github.com/zhanglmyf/dsh-free-model-bridge) — 让 DSH 自动加载免费云端模型
+- [lan-transparent-proxy](https://github.com/zhanglmyf/lan-transparent-proxy) — 局域网透明代理一键部署
 
 ## License
 

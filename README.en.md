@@ -1,6 +1,5 @@
 # Xiaomi Speaker WorkBuddy Bridge
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -90,6 +89,13 @@ See [references/pitfalls.md](references/pitfalls.md) (bug ①–⑩) and the in-
 ## Contributing
 
 Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Run `python3 scripts/healthcheck.py` before submitting. Changelog: [CHANGELOG.md](CHANGELOG.md).
+
+## Related projects
+
+- [xiaomi-speaker-workbuddy-bridge](https://github.com/zhanglmyf/xiaomi-speaker-workbuddy-bridge) **(this project)** — Turn any Xiaomi speaker into a voice AI assistant
+- [dsh-universal-installer](https://github.com/zhanglmyf/dsh-universal-installer) — Deploy DeepSeek Harness anywhere
+- [dsh-free-model-bridge](https://github.com/zhanglmyf/dsh-free-model-bridge) — Auto-load free cloud models into DSH
+- [lan-transparent-proxy](https://github.com/zhanglmyf/lan-transparent-proxy) — One-click LAN transparent proxy
 
 ## License
 
