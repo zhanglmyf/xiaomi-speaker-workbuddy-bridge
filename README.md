@@ -1,13 +1,36 @@
 # Xiaomi Speaker WorkBuddy Bridge
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Stars](https://img.shields.io/github/stars/zhanglmyf/xiaomi-speaker-workbuddy-bridge?style=social)](https://github.com/zhanglmyf/xiaomi-speaker-workbuddy-bridge/stargazers)
+
+**中文** | [English](README.en.md)
+
 把任意型号小米/小爱音箱接入 AI（WorkBuddy / DSH / Claude / Codex / 通义千问 / 任何 Agent），实现**语音下任务、音箱播报反馈**。
+
+![链路概览](assets/banner.svg)
+
+> ⭐ 如果这个项目对你有帮助，点个 **Star** 就是最大的支持，也帮助更多人发现它。
+
+## 为什么用它
+
+- **盘活闲置音箱**：家里吃灰的小爱音箱，变身能回答任何问题的 AI 语音助手
+- **任意型号 / 任意 AI**：音箱走 xiaomusic 云端控制，模型只要 OpenAI 兼容接口，都可替换
+- **网络自适应**：IP 变了不用改代码，地址、网关、docker 通道全部自动发现
+- **隐私可控**：密钥可只放环境变量；所有配置单一来源，随时改口令/端口
 
 ## 链路原理
 
-```
-你说话 → 小爱同学唤醒 → xiaomusic 捕获文字
-    → 口令触发插件 → POST 桥接服务 (bridge.py)
-    → LLM 生成回答 → /playtts 下发 → 音箱出声
+```mermaid
+flowchart LR
+    A[你说话] --> B[小爱同学唤醒<br/>小米云端 ASR]
+    B --> C[xiaomusic<br/>捕获文字]
+    C --> D[口令触发插件]
+    D --> E[桥接服务<br/>bridge.py]
+    E --> F[任意 LLM<br/>生成回答]
+    F --> G[/playtts 下发/]
+    G --> H[音箱出声]
 ```
 
 **关键点**：AI 模型只处理文字，和"音箱怎么响"无关。换任何 LLM 都能跑。
@@ -141,6 +164,7 @@ curl http://127.0.0.1:8900/health
 | `netprobe.py` | 网络自动发现（IP/网关/容器/xiaomusic 地址） |
 | `patch_xiaomusic.py` | 容器内补丁（插件/口令/cookies/token 保留） |
 | `restore_token.py` | 凭证丢失时从 auth.json 备份重建 `.mi.token` |
+| `healthcheck.py` | 本地自检（无网络，验证完整性 + 脱敏） |
 
 ## 排障速查
 
@@ -177,6 +201,16 @@ curl http://127.0.0.1:8900/health
 | 驱动层 | `SKILL.md`（frontmatter） | ❌ WorkBuddy 专用，其他 Agent 需自己写触发规则 |
 
 其他 Agent（DSH/Claude/Codex/通义千问等）拿到 `scripts/` 目录即可手动调用，语音入口不依赖具体 AI 模型。
+
+## 参与贡献
+
+遇到问题或有想法？欢迎提 [Issue](https://github.com/zhanglmyf/xiaomi-speaker-workbuddy-bridge/issues) 或 [贡献代码](CONTRIBUTING.md)。提交前可先跑本地自检：
+
+```bash
+python3 scripts/healthcheck.py
+```
+
+改动记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## License
 
