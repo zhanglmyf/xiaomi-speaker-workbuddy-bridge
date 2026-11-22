@@ -1,11 +1,12 @@
 name: Set repository topics
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/set-topics.yml'
   workflow_dispatch:
+    inputs:
+      note:
+        description: 'Requires Settings > Actions > General > Workflow permissions = Read and write'
+        required: false
+        default: ''
 
 permissions:
   contents: write
