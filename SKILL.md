@@ -55,8 +55,9 @@ agent_created: true
 
 ### 4. 启动桥接服务
 - 前台：`python3 scripts/bridge.py`
-- **在 WorkBuddy 里用受管后台方式启动**（不要用 nohup setsid，会继承受限环境导致 errno 38）
+- **在 WorkBuddy 里用受管后台方式启动**（不要用 nohup setsid，会继承受限环境导致 errno 38）；启动时清除继承来的无关敏感环境变量
 - 验证：`curl http://127.0.0.1:<port>/health`
+- 访问口令：首次启动自动生成脚本同目录 `.bridge_token`（权限 600），`deploy.py` 会把同一口令注入插件；从旧版升级后**必须重跑一次 `deploy.py`**，否则插件不带口令会 401
 
 ### 5. 真人验证
 - 喊"小爱同学……<口令>，在吗"，确认音箱出声
@@ -68,6 +69,7 @@ agent_created: true
 - **网络自适应（关键）**：`xiaomusic_url` 填 `auto` 即自动发现（本机/网关/docker inspect/网段多候选探测）；`deploy.py` 自动推导容器名、docker 通道、桥接可达地址。**音箱自身 IP 从不参与**——音箱只跟小米云端通信，我们只连 xiaomusic
 - **任意 LLM**：OpenAI 兼容 API 即可（智谱/DeepSeek/OpenRouter/Ollama 本地），模型可换
 - **口令/端口全可配（单一配置源）**：口令、桥接端口、xiaomusic 端口、助手名全在 `config.json`；`deploy.py` 自动同步口令到 xiaomusic、端口到插件，改一处全链路生效，不会两处脱节
+- **访问口令保护**：`/speak` 与 `/history` 默认要求 `X-Bridge-Token`（或 `?token=`），`/health` 公开供监控；口令可来自环境变量、config 或 600 权限口令文件，不进源码、不进发布包。单机建议 `listen=127.0.0.1`
 - **语音任务单**：「<口令>，记任务：xxx」写入 `tasks.md`；「查看任务」语音念概览
 - **对话存档**：所有问答存档 `history.md`，WorkBuddy 可查阅
 - **方言理解**：`dialect.md` 内容自动注入系统提示（只提升"懂"，不能让小米 ASR 识别纯方言）

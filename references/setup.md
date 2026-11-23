@@ -47,6 +47,9 @@ python3 scripts/netprobe.py --docker-cmd "ssh root@<网关> docker"
 | `llm.model` | 模型名 | `glm-4-flash` / `qwen2.5:7b` |
 | `llm.key` | 密钥；可留空改用环境变量 | `XIAOPI_LLM_KEY` |
 | `port` | 桥接监听端口 | `8900` |
+| `listen` | 桥接监听地址；单机填 `127.0.0.1`，跨容器/局域网才填 `0.0.0.0` | `0.0.0.0` |
+| `auth.required` | 是否启用访问口令（默认开启） | `true` |
+| `auth.token_file` | 口令文件（相对脚本目录）；不存在时首次启动自动生成 0600 随机口令 | `.bridge_token` |
 | `assistant_name` / `owner_name` | 助手名 / 主人称呼 | 写进系统提示 + 插件失败提示 |
 | `wake_keyword` | 语音口令 | `小皮小皮` |
 | `workspace_dir` | 任务单/存档落点 | 留空用 `data/` |
@@ -83,11 +86,22 @@ ssh root@<gateway> 'docker exec -i xiaomusic python3 -' < scripts/patch_xiaomusi
 ssh root@<gateway> 'docker exec -i \
   -e XIAOPI_APP_DIR=/app \
   -e XIAOPI_BRIDGE_URL=http://<workbuddy容器IP>:<port>/speak \
+  -e XIAOPI_BRIDGE_TOKEN=<桥接访问口令> \
   -e XIAOPI_WAKE=<口令> \
   -e XIAOPI_NAME=<助手名> \
   -e XIAOPI_PLUGIN=xiaopi \
   xiaomusic python3 -' < scripts/patch_xiaomusic.py
 ```
+
+**访问口令链路**：`bridge.py` 首次启动在脚本同目录生成 `.bridge_token`（权限 600）；`deploy.py` 读同一文件并把口令注入插件，插件每次 POST 带 `X-Bridge-Token` 头。验证：
+
+```bash
+curl -H "X-Bridge-Token: $(cat scripts/.bridge_token)" \
+  -X POST http://127.0.0.1:8900/speak -H 'Content-Type: application/json' \
+  -d '{"text":"测试"}'
+```
+
+口令不要贴进会话或日志。轮换时删除 `.bridge_token`，重启桥接服务，再重跑 `deploy.py`。
 
 手工方式下 `<口令>`/`<助手名>`/`<port>` 要与 `config.json` 保持一致；用 `deploy.py` 则自动同步，不会漏。
 

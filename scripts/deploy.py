@@ -94,6 +94,8 @@ def main():
     ap.add_argument("--bridge-port", type=int,
                     default=int(os.environ.get("XIAOPI_PORT",
                                                str(cfg.get("port", 8900)))))
+    ap.add_argument("--bridge-token", default="",
+                    help="桥接访问口令；默认从 config.json auth 或口令文件读取")
     ap.add_argument("--wake", default=os.environ.get("XIAOPI_WAKE", cv("wake_keyword", "小皮小皮")),
                     help="语音口令；不传=用 config.json 的 wake_keyword")
     ap.add_argument("--plugin", default=os.environ.get("XIAOPI_PLUGIN", cv("plugin", "xiaopi")))
@@ -106,6 +108,19 @@ def main():
 
     if cfg:
         print(f"[配置] 从 {CONFIG_PATH.name} 读取：口令={args.wake!r} 端口={args.bridge_port} 助手名={args.name!r}")
+
+    # 访问口令与 bridge.py 共用解析逻辑：口令文件不存在会自动生成（dry-run 除外）
+    try:
+        from auth_token import resolve_token
+        bridge_token = resolve_token(cfg, HERE, generate=not args.dry_run)
+    except ImportError:
+        bridge_token = os.environ.get("XIAOPI_BRIDGE_TOKEN", "").strip() or str((cfg.get("auth") or {}).get("token", "") or "").strip()
+    if args.bridge_token:
+        bridge_token = args.bridge_token
+    if bridge_token:
+        print("[安全] 桥接访问口令已就绪，将同步到 xiaomusic 插件（不回显内容）")
+    else:
+        print("[警告] 未取得桥接访问口令：插件将不带口令；桥接侧启用认证时会返回 401")
 
     docker = detect_docker(args.docker_cmd)
     if not docker:
@@ -138,12 +153,14 @@ def main():
         print(f"  桥接端口    : {args.bridge_port}")
         print(f"  语音口令    : {args.wake}")
         print(f"  助手名      : {args.name}")
+        print(f"  访问口令    : {'已就绪（内容不回显）' if bridge_token else '未配置'}")
         return
 
     # 传补丁脚本到容器 stdin 执行
     patch_src = PATCH_SCRIPT.read_text(encoding="utf-8")
     env_prefix = (
         f"XIAOPI_BRIDGE_URL={shlex.quote(bridge)} "
+        f"XIAOPI_BRIDGE_TOKEN={shlex.quote(bridge_token)} "
         f"XIAOPI_WAKE={shlex.quote(args.wake)} "
         f"XIAOPI_NAME={shlex.quote(args.name)} "
         f"XIAOPI_PLUGIN={shlex.quote(args.plugin)} "
@@ -168,6 +185,7 @@ def main():
             if any(k in line.lower() for k in ("login", "token", "device", "error", "xiaopi")):
                 print("  ", line[:180])
     print("完成。下一步：启动 bridge.py，然后真人喊一句验证。")
+    print("注意：若刚升级到带访问口令的版本，必须重跑本脚本一次，否则旧插件不带口令会被 401。")
 
 
 if __name__ == "__main__":

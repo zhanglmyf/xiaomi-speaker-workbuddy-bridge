@@ -82,6 +82,10 @@ Fill `assets/dialect.md` (see [references/dialect.md](references/dialect.md)) to
 | `restore_token.py` | rebuild token from auth.json backup |
 | `healthcheck.py` | local self-check (no network, no privacy leaks) |
 
+## Security
+
+`/speak` and `/history` require an access token (`X-Bridge-Token` header or `?token=`); only `/health` is public and contains no secrets. Token priority: `XIAOPI_BRIDGE_TOKEN` env > `auth.token` in config > `auth.token_file` (default `.bridge_token`, auto-generated with 0600 on first run). `deploy.py` reads the same file and injects the token into the xiaomusic plugin — the value is never echoed. Use `listen: "127.0.0.1"` on a single host; reserve `0.0.0.0` for cross-container/LAN setups with the token enabled. When upgrading from an older release, re-run `deploy.py` once so the plugin carries the token, otherwise requests get 401.
+
 ## Troubleshooting
 
 See [references/pitfalls.md](references/pitfalls.md) (bug ①–⑩) and the in-repo issue templates.

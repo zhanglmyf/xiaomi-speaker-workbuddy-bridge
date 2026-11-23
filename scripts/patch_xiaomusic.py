@@ -16,6 +16,7 @@ xiaomusic 容器内补丁脚本（幂等，可重复运行）
 
 参数：通过环境变量传入（在 docker exec 时用 -e 或包装脚本导出）
   XIAOPI_BRIDGE_URL   桥接地址（必填，由 deploy.py 自动推导传入；形如 http://<容器IP>:<port>/speak）
+  XIAOPI_BRIDGE_TOKEN 桥接访问口令（由 deploy.py 从口令文件读取；插件用它加 X-Bridge-Token 头）
   XIAOPI_WAKE         语音口令，默认 小皮小皮（由 deploy.py 从 config.json 同步）
   XIAOPI_NAME         助手名，默认 小皮（用于插件失败提示；由 deploy.py 从 config.json 同步）
   XIAOPI_PLUGIN       插件文件名/函数名，默认 xiaopi
@@ -33,6 +34,7 @@ APP = Path(os.environ.get("XIAOPI_APP_DIR", "/app"))
 BRIDGE_URL = os.environ.get("XIAOPI_BRIDGE_URL", "")
 if not BRIDGE_URL:
     raise SystemExit("!! 必须设置 XIAOPI_BRIDGE_URL（用 deploy.py 会自动推导，或先用 netprobe.py 查候选）")
+BRIDGE_TOKEN = os.environ.get("XIAOPI_BRIDGE_TOKEN", "")
 WAKE = os.environ.get("XIAOPI_WAKE", "小皮小皮")
 NAME = os.environ.get("XIAOPI_NAME", "小皮")
 PLUGIN = os.environ.get("XIAOPI_PLUGIN", "xiaopi")
@@ -80,7 +82,8 @@ def write_plugin():
     PLUGIN_FILE.parent.mkdir(parents=True, exist_ok=True)
     code = f'''import aiohttp
 
-BRIDGE_URL = "{BRIDGE_URL}"
+BRIDGE_URL = {json.dumps(BRIDGE_URL)}
+BRIDGE_TOKEN = {json.dumps(BRIDGE_TOKEN)}
 
 
 async def {PLUGIN}():
@@ -89,8 +92,9 @@ async def {PLUGIN}():
     log.info(f"[xiaopi] 转发: {{query}}")
     try:
         timeout = aiohttp.ClientTimeout(total=30)
+        headers = {{"X-Bridge-Token": BRIDGE_TOKEN}} if BRIDGE_TOKEN else {{}}
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(BRIDGE_URL, json={{"text": query}}) as resp:
+            async with session.post(BRIDGE_URL, json={{"text": query}}, headers=headers) as resp:
                 body = await resp.text()
                 log.info(f"[xiaopi] 桥接返回 {{resp.status}}: {{body[:200]}}")
     except Exception as e:
@@ -103,7 +107,7 @@ async def {PLUGIN}():
 '''
     ast.parse(code)
     PLUGIN_FILE.write_text(code, encoding="utf-8")
-    actions.append(f"插件写入 {PLUGIN_FILE} (BRIDGE_URL={BRIDGE_URL})")
+    actions.append(f"插件写入 {PLUGIN_FILE} (BRIDGE_URL={BRIDGE_URL}, 访问口令={'已注入' if BRIDGE_TOKEN else '未配置'})")
 
 
 def patch_conversation():

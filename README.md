@@ -186,9 +186,15 @@ curl http://127.0.0.1:8900/health
 
 ## 安全与脱敏
 
-- **不打包**任何真实 API Key / DID / 账号凭证
-- 密钥通过环境变量 `XIAOPI_LLM_KEY` 传入，或写入 config.json（自行保管）
-- 配置文件建议加入 `.gitignore`
+- **不打包**任何真实 API Key / DID / 账号凭证、访问口令
+- 大模型密钥：优先用环境变量 `XIAOPI_LLM_KEY`，或写入 config.json（自行保管）
+- **桥接访问口令**：`/speak`、`/history` 默认要求 `X-Bridge-Token` 请求头（也支持 `?token=`）；`/health` 公开供监控，不含任何密钥
+  - 口令来源优先级：`XIAOPI_BRIDGE_TOKEN` 环境变量 > config.json 的 `auth.token` > `auth.token_file` 指向的文件（默认脚本同目录 `.bridge_token`）
+  - 口令文件不存在时首次启动自动生成 0600 权限随机口令；`deploy.py` 读取同一文件注入 xiaomusic 插件，全程不回显口令内容
+  - 单机运行把 `listen` 改成 `127.0.0.1`；只有跨容器/局域网才用 `0.0.0.0`，且必须保留口令
+  - 启动长期服务时用受管后台方式，并清除继承下来的无关敏感环境变量，不要把整个宿主环境带进服务进程
+- `.gitignore` 已排除 `config.json`、`.bridge_token`、`bridge.log`
+- **从旧版升级**：新版默认开启访问口令，必须重跑一次 `python3 scripts/deploy.py` 把口令同步到插件，否则旧插件会被 401（见 `bridge.log` 的拒绝记录）
 
 ## 通用性说明
 

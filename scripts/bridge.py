@@ -17,9 +17,15 @@
   3. 或交给 WorkBuddy 以受管后台方式启动（见 SKILL.md）
 
 环境变量覆盖：
-  XIAOPI_CONFIG   配置文件路径（默认脚本同目录 config.json）
+  XIAOPI_CONFIG           配置文件路径（默认脚本同目录 config.json）
+  XIAOPI_LLM_KEY          大模型密钥（优先于 config.json 的 llm.key）
+  XIAOPI_BRIDGE_TOKEN     桥接访问口令（优先于口令文件）
+  XIAOPI_AUTH_TOKEN_FILE  口令文件路径（默认脚本同目录 .bridge_token）
+
+安全：/speak 与 /history 默认要求 X-Bridge-Token 头或 ?token=；/health 公开供监控。
 """
 import asyncio
+import hmac
 import json
 import logging
 import os
@@ -45,6 +51,12 @@ try:
 except ImportError:
     discover_xiaomusic = None
 
+# 访问口令解析（与 deploy.py 共用同一份实现）
+try:
+    from auth_token import resolve_token
+except ImportError:
+    resolve_token = None
+
 
 # ============ 配置加载 ============
 DEFAULTS = {
@@ -53,7 +65,13 @@ DEFAULTS = {
     "did": "",                      # 空 = 启动时自动发现
     "device_match": "",             # 可选：按型号/别名关键词匹配，如 "LX06"
     "port": 8900,                   # 桥接监听端口；deploy 会自动同步到插件 BRIDGE_URL
-    "listen": "0.0.0.0",
+    "listen": "0.0.0.0",            # 单机可改 127.0.0.1；跨容器/局域网才需要 0.0.0.0
+    "auth": {
+        "required": True,           # 开启访问口令；关掉前请确认只有可信网络能访问本端口
+        "token": "",                # 留空则读 token_file；也可设 XIAOPI_BRIDGE_TOKEN
+        "token_file": ".bridge_token",  # 相对脚本目录；首次启动自动生成 0600
+        "public_paths": ["/health"],    # 仅监控端点免口令，且不包含任何密钥
+    },
     "llm": {
         "api": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
         "model": "glm-4-flash",
@@ -112,6 +130,17 @@ logging.basicConfig(
     handlers=[logging.FileHandler(LOG_FILE, encoding="utf-8"), logging.StreamHandler()],
 )
 log = logging.getLogger("xiaopi")
+
+# ============ 访问口令 ============
+AUTH = CFG.get("auth") or {}
+AUTH_REQUIRED = bool(AUTH.get("required", True))
+PUBLIC_PATHS = set(AUTH.get("public_paths") or ["/health"])
+if resolve_token:
+    AUTH_TOKEN = resolve_token(CFG, BASE_DIR, generate=AUTH_REQUIRED, log=log)
+else:
+    AUTH_TOKEN = os.environ.get("XIAOPI_BRIDGE_TOKEN", "").strip() or str(AUTH.get("token", "") or "").strip()
+if AUTH_REQUIRED and not AUTH_TOKEN:
+    log.warning("访问口令未配置且无法生成：/speak 与 /history 将返回 401，请检查口令文件权限")
 
 PORT = int(CFG["port"])
 LISTEN = CFG["listen"]
@@ -503,8 +532,22 @@ async def handle_history(request: web.Request) -> web.Response:
         return web.json_response({"ret": "OK", "records": []})
 
 
+@web.middleware
+async def auth_middleware(request: web.Request, handler):
+    """除公开监控端点外，所有请求都要带访问口令。"""
+    if not AUTH_REQUIRED or request.path in PUBLIC_PATHS:
+        return await handler(request)
+    if not AUTH_TOKEN:
+        return web.json_response({"ret": "ERR", "msg": "bridge token unavailable"}, status=503)
+    supplied = request.headers.get("X-Bridge-Token", "") or request.query.get("token", "")
+    if not hmac.compare_digest(str(supplied), str(AUTH_TOKEN)):
+        log.warning(f"拒绝未授权请求 {request.method} {request.path} from {request.remote}")
+        return web.json_response({"ret": "ERR", "msg": "unauthorized"}, status=401)
+    return await handler(request)
+
+
 def build_app() -> web.Application:
-    app = web.Application()
+    app = web.Application(middlewares=[auth_middleware])
     app.router.add_get("/health", handle_health)
     app.router.add_post("/speak", handle_speak)
     app.router.add_get("/history", handle_history)
@@ -516,6 +559,7 @@ if __name__ == "__main__":
     log.info(f"{NAME}桥接服务启动 {LISTEN}:{PORT} | LLM {CFG['llm']['model']} | xiaomusic {mode}")
     log.info(f"方言表: {'已加载 ' + str(DIALECT_FILE) if DIALECT_FILE.exists() else '未配置（可选）'}")
     log.info(f"工作空间: {WS_DIR}")
+    log.info(f"访问口令: {'已启用（/health 免口令）' if AUTH_REQUIRED and AUTH_TOKEN else '未启用'}")
     if not CFG["llm"].get("key"):
         log.warning("LLM 密钥未配置：请填 config.json 的 llm.key 或设环境变量 XIAOPI_LLM_KEY")
     web.run_app(build_app(), host=LISTEN, port=PORT, print=None)

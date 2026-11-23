@@ -10,6 +10,14 @@
   "port": 8900,
   "_port说明": "桥接监听端口。改这里后，重新跑 deploy.py 会自动把插件的 BRIDGE_URL 同步到新端口（也可命令行 --bridge-port 覆盖）。",
   "listen": "0.0.0.0",
+  "_listen说明": "单机运行建议填 127.0.0.1；只有 xiaomusic 在另一个容器/另一台机器时才需要 0.0.0.0（配合访问口令使用）。",
+  "auth": {
+    "required": true,
+    "token": "",
+    "token_file": ".bridge_token",
+    "public_paths": ["/health"]
+  },
+  "_auth说明": "访问口令保护 /speak 和 /history。token 留空时从 token_file 读取；文件不存在会自动生成 600 权限随机口令。deploy.py 会把同一个口令注入 xiaomusic 插件。改 required=false 前请确认端口只对可信网络开放。",
   "llm": {
     "api": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
     "model": "glm-4-flash",

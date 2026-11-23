@@ -13,6 +13,7 @@
   3. config.example.json 是合法 JSON 且关键字段齐全
   4. 脱敏扫描：无写死的真实 IP / token / 私人路径
   5. netprobe 基础函数可导入
+  6. 发布包内不含 config.json / .bridge_token 等运行期凭证文件
 """
 from __future__ import annotations
 
@@ -30,12 +31,12 @@ REQUIRED = [
     "assets/banner.svg", "assets/config.example.json", "assets/dialect.example.md",
     "assets/xiaopi_plugin.py",
     "references/setup.md", "references/pitfalls.md", "references/dialect.md",
-    "scripts/bridge.py", "scripts/deploy.py", "scripts/netprobe.py",
+    "scripts/bridge.py", "scripts/deploy.py", "scripts/netprobe.py", "scripts/auth_token.py",
     "scripts/patch_xiaomusic.py", "scripts/restore_token.py", "scripts/healthcheck.py",
     ".github/ISSUE_TEMPLATE/bug_report.yml", ".github/ISSUE_TEMPLATE/feature_request.yml",
 ]
 
-CONFIG_KEYS = ["xiaomusic_url", "xiaomusic_port", "port", "wake_keyword",
+CONFIG_KEYS = ["xiaomusic_url", "xiaomusic_port", "port", "listen", "auth", "wake_keyword",
                "assistant_name", "owner_name", "llm"]
 
 # 脱敏红线：这些模式不应出现在发布包里（占位符 <...> 和 x.x 形式不算）
@@ -105,6 +106,11 @@ try:
     report(True, "netprobe 模块可导入")
 except Exception as e:
     report(False, f"导入失败: {e}")
+
+print("\n=== 6. 运行期凭证未入库 ===")
+for name in ("config.json", ".bridge_token"):
+    hits = [f for f in ROOT.rglob(name) if f.is_file() and ".git" not in f.parts]
+    report(not hits, f"未打包 {name}" + (f"（发现 {hits[0]}）" if hits else ""))
 
 print("\n" + "=" * 40)
 if ok:

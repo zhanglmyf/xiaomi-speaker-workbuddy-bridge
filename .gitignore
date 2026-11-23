@@ -1,6 +1,7 @@
 bridge.log
 data/
 config.json
+.bridge_token
 *.pyc
 __pycache__/
 .DS_Store

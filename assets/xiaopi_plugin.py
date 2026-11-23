@@ -2,6 +2,7 @@ import aiohttp
 
 # 由 deploy.py 注入实际值；这里是通用占位，不会直接使用本文件
 BRIDGE_URL = "__XIAOPI_BRIDGE_URL__"
+BRIDGE_TOKEN = "__XIAOPI_BRIDGE_TOKEN__"
 ASSISTANT_NAME = "__XIAOPI_NAME__"
 
 
@@ -12,8 +13,9 @@ async def __FUNC_NAME__():
     log.info(f"[xiaopi] 转发: {query}")
     try:
         timeout = aiohttp.ClientTimeout(total=30)
+        headers = {"X-Bridge-Token": BRIDGE_TOKEN} if BRIDGE_TOKEN else {}
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(BRIDGE_URL, json={"text": query}) as resp:
+            async with session.post(BRIDGE_URL, json={"text": query}, headers=headers) as resp:
                 body = await resp.text()
                 log.info(f"[xiaopi] 桥接返回 {resp.status}: {body[:200]}")
     except Exception as e:
